@@ -1,0 +1,137 @@
+{
+  "createdAt": "2023-09-06T02:27:25.396Z",
+  "updatedAt": "2023-09-06T06:42:35.621Z",
+  "id": "YqLWc5DwizzPkyTZ",
+  "name": "spotify like to tg",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "7da69bcd-6f44-4433-a898-61eec2ace9e2",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        660,
+        -720
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "library",
+        "limit": 10
+      },
+      "name": "Get liked tracks",
+      "type": "n8n-nodes-base.spotify",
+      "position": [
+        900,
+        -620
+      ],
+      "typeVersion": 1,
+      "id": "1f7a46d1-f69e-4959-8b97-6cbf141e1820",
+      "credentials": {
+        "spotifyOAuth2Api": {
+          "id": "XuW8tc8YAoc0PcJY",
+          "name": "Spotify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "const staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.track.id;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse()"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -620
+      ],
+      "id": "8c8bc705-bdf7-4a8e-912b-724fc5a44d61"
+    },
+    {
+      "parameters": {
+        "chatId": "@chensoul_share",
+        "text": "=🎵 <u>{{$json[\"track\"][\"name\"]}}</u> by <em>{{$json[\"track\"][\"artists\"][0][\"name\"]}}</em> #music #spotify\n\nhttps://open.spotify.com/track/{{$json[\"track\"][\"id\"]}}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        -620
+      ],
+      "id": "e4f9754d-9be5-4c9c-87af-c0caa93088fd",
+      "credentials": {
+        "telegramApi": {
+          "id": "9TSE4L0awDEKF86f",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "interval": 15,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        660,
+        -400
+      ],
+      "id": "d8dbf134-5c9e-4bc6-993a-660d928a4941"
+    }
+  ],
+  "connections": {
+    "Get liked tracks": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "Get liked tracks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "lastItemId": "1ccNLIJMQxsTleaULYWwZD"
+    }
+  },
+  "pinData": {},
+  "versionId": "b80268c6-8adf-44e3-a3e2-4f338c479296",
+  "triggerCount": 1,
+  "tags": []
+}

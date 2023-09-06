@@ -1,0 +1,131 @@
+{
+  "createdAt": "2023-09-06T02:25:16.909Z",
+  "updatedAt": "2023-09-06T06:55:25.584Z",
+  "id": "99mohJ56NC00zJfu",
+  "name": "listennotes to tg",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "9f128d90-bdd2-4b33-a1de-d8c6a32cb650",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.listennotes.com/listen/chensoul-pl3HgWLaMvF/rss/",
+        "options": {}
+      },
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        -440
+      ],
+      "id": "f196dbb0-6e3b-401e-b31d-cb7e84651bb8"
+    },
+    {
+      "parameters": {
+        "interval": 30,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -440
+      ],
+      "id": "b72bec7b-d13e-4768-a650-0176c20fd05f"
+    },
+    {
+      "parameters": {
+        "chatId": "@chensoul_share",
+        "text": "=📻 {{$node[\"RSS Feed Read\"].json[\"title\"]}} #podcast\n\n{{$node[\"RSS Feed Read\"].json[\"link\"]}}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1580,
+        -440
+      ],
+      "id": "b989a913-547b-4619-b97d-eb14491751a9",
+      "credentials": {
+        "telegramApi": {
+          "id": "9TSE4L0awDEKF86f",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "/* only return new items */\nconst staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.guid;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse()"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        -440
+      ],
+      "id": "162e125e-91f3-4085-a48a-529cea998ba2"
+    }
+  ],
+  "connections": {
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "lastItemId": "https://www.listennotes.com/e/p/55096bf63f7b4ce5a9b82bfcc7bce088/"
+    }
+  },
+  "pinData": {},
+  "versionId": "0f76c6d4-6b58-4403-b9d6-e673b29cc654",
+  "triggerCount": 1,
+  "tags": []
+}

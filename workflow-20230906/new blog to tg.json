@@ -1,0 +1,148 @@
+{
+  "createdAt": "2023-09-06T02:03:57.189Z",
+  "updatedAt": "2023-09-06T02:05:02.500Z",
+  "id": "3o4QxFL12W6nIjOn",
+  "name": "new blog to tg",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "d0f809ee-0cc1-4a7e-ac14-4958376409d4",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://blog.chensoul.com/index.xml",
+        "options": {}
+      },
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -100
+      ],
+      "id": "5b9dfdc9-bb1d-4259-a5bf-3202d4895bc5"
+    },
+    {
+      "parameters": {
+        "functionCode": "/* only return new items */\nconst staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.guid;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse()"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        -100
+      ],
+      "id": "6d6b097f-a985-49d4-9eac-06b620275308"
+    },
+    {
+      "parameters": {
+        "text": "=新文章: {{$node[\"Function\"].json[\"title\"]}}\n{{$node[\"Function\"].json[\"link\"]}}\n\n{{$node[\"Function\"].json[\"contentSnippet\"]}}",
+        "additionalFields": {}
+      },
+      "id": "e7cb2596-74e4-4b56-b1b1-242c6944e568",
+      "name": "Twitter",
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        -260
+      ],
+      "credentials": {
+        "twitterOAuth1Api": {
+          "id": "12",
+          "name": "Twitter OAuth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "@chensoul_share",
+        "text": "=<a href=\"https://t.me/iv?url={{$node[\"RSS Feed Read\"].json[\"link\"]}}&rhash=72a84540ff6616\">📝</a> {{$node[\"RSS Feed Read\"].json[\"title\"]}} #blog\n\n{{$json[\"contentSnippet\"]}}\n\n{{$node[\"RSS Feed Read\"].json[\"link\"]}}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        40
+      ],
+      "id": "9b64e2a9-0f79-4a29-a4a7-9fc62124c245",
+      "credentials": {
+        "telegramApi": {
+          "id": "9TSE4L0awDEKF86f",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "9a883425-69e8-4add-b061-9371d85003b3",
+        "options": {}
+      },
+      "id": "2d5cbe54-0828-4ce5-924f-c1b3adfa73e1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -100
+      ],
+      "webhookId": "9a883425-69e8-4add-b061-9371d85003b3"
+    }
+  ],
+  "connections": {
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "ab02685c-1ae1-4135-9352-db83a0fe3eb9",
+  "triggerCount": 1,
+  "tags": []
+}

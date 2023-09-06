@@ -1,0 +1,155 @@
+{
+  "createdAt": "2023-09-06T02:01:51.048Z",
+  "updatedAt": "2023-09-06T06:03:13.146Z",
+  "id": "qZgCLYjKEbnHPg4z",
+  "name": "douban to tg",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "9fd9c83c-28a7-43e5-a36e-68758ed45128",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.douban.com/feed/people/chensoul/interests",
+        "options": {}
+      },
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        300
+      ],
+      "id": "2f9c622e-c0e0-426f-b6a4-6b659e144391"
+    },
+    {
+      "parameters": {
+        "functionCode": "/* only return new items */\nconst staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.guid;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse();"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        300
+      ],
+      "id": "14a1d805-2a59-4e32-ac3e-5082d8329921"
+    },
+    {
+      "parameters": {
+        "chatId": "@chensoul_share",
+        "text": "={{$json[\"tgTitle\"]}}\n\n{{$json[\"link\"]}}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1780,
+        460
+      ],
+      "id": "f7a16f22-1050-4c11-b083-163ac558e34e",
+      "credentials": {
+        "telegramApi": {
+          "id": "9TSE4L0awDEKF86f",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "interval": 60,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        460
+      ],
+      "id": "ff4e8dbd-7ffc-4cde-bde0-fb8f26b96599"
+    },
+    {
+      "parameters": {
+        "functionCode": "/* filter items */\nconst newItems = [];\n\nconst SYMBOL_MOVIE = '📺'\nconst SYMBOL_BOOK = '📖'\n\nconst tagInfoMap = {\n  watched: { re: /看过/, symbol: SYMBOL_MOVIE },\n  watching: { re: /在看/, symbol: SYMBOL_MOVIE },\n  read: { re: /读过/, symbol: SYMBOL_BOOK },\n  reading: { re: /在读/, symbol: SYMBOL_BOOK },\n}\n\nfor (const item of items) {\n  const title = item.json.title\n  let tag, symbol\n\n  for (const key in tagInfoMap) {\n    const tagInfo = tagInfoMap[key]\n    if (tagInfo.re.test(title)) {\n      tag = key\n      symbol = tagInfo.symbol\n      break\n    }\n  }\n\n  if (tag) {\n    item.json.tag = tag\n    item.json.tgTitle = `${symbol} ${title} #douban #${tag}`\n    newItems.push(item)\n  }\n}\n\nreturn newItems"
+      },
+      "name": "Function filter",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        460
+      ],
+      "id": "9436c02d-328c-4094-a124-a07494fd6cb5"
+    }
+  ],
+  "connections": {
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "Function filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function filter": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "lastItemId": "https://www.douban.com/people/chensoul/interests/3831020590"
+    }
+  },
+  "pinData": {},
+  "versionId": "b1de1a2d-01ff-4ecd-8315-87abe83030d2",
+  "triggerCount": 1,
+  "tags": []
+}

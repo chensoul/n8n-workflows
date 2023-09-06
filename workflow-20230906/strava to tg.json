@@ -1,0 +1,137 @@
+{
+  "createdAt": "2023-09-06T05:50:26.785Z",
+  "updatedAt": "2023-09-06T06:48:03.028Z",
+  "id": "b4o1qBrZ501pPReZ",
+  "name": "strava to tg",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "4d0f5c7c-1ad0-46c8-b80f-f787629e36e9",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "interval": 30,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -440
+      ],
+      "id": "ba55e60b-c143-41bb-9335-06b8ce068029"
+    },
+    {
+      "parameters": {
+        "chatId": "@chensoul_share",
+        "text": "=🏃🏻 #{{ $json.name }} {{ $json[\"start_date_local\"] }}，我跑了 {{ $json[\"distance\"] }} 米，总共用时 {{ $json[\"elapsed_time\"]/60 }} 分钟。 #strava\n\nhttps://www.strava.com/activities/{{ $json[\"id\"] }}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1580,
+        -440
+      ],
+      "id": "07f1be4f-825c-4ef3-a062-108eae667619",
+      "credentials": {
+        "telegramApi": {
+          "id": "9TSE4L0awDEKF86f",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "/* only return new items */\nconst staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.id;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse()"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        -440
+      ],
+      "id": "aa093c43-03d0-4a87-afa9-95ff9e537682"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 2
+      },
+      "id": "f608c0ed-9efa-4d5a-8f3f-199ba59b20d9",
+      "name": "Strava",
+      "type": "n8n-nodes-base.strava",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        -440
+      ],
+      "credentials": {
+        "stravaOAuth2Api": {
+          "id": "9EVu7p6Fc4UPyqDo",
+          "name": "Strava account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "Strava",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Strava": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "lastItemId": 9229708039
+    }
+  },
+  "pinData": {},
+  "versionId": "143c434f-ef05-4256-bb61-2746552a975f",
+  "triggerCount": 1,
+  "tags": []
+}

@@ -1,0 +1,142 @@
+{
+  "createdAt": "2023-09-06T02:00:08.202Z",
+  "updatedAt": "2023-09-06T06:53:20.427Z",
+  "id": "cGNLnrTqqf4zopi9",
+  "name": "blog to tg",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        -40
+      ],
+      "id": "3c697994-9c1e-4b0f-a64c-4e8ae3e297d1"
+    },
+    {
+      "parameters": {
+        "url": "https://blog.chensoul.com/index.xml",
+        "options": {}
+      },
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        -240
+      ],
+      "id": "6e629c5c-66d2-4198-ada0-a364bf2b0c11"
+    },
+    {
+      "parameters": {
+        "interval": 10,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        -240
+      ],
+      "id": "ed40e07d-0fca-4700-b205-e49798e3ab4c"
+    },
+    {
+      "parameters": {
+        "chatId": "@chensoul_share",
+        "text": "=📝 {{$node[\"RSS Feed Read\"].json[\"title\"]}} #blog\n\n{{$node[\"RSS Feed Read\"].json[\"link\"]}}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1700,
+        -240
+      ],
+      "id": "c8e097e2-8624-4a62-8c7a-c2fb9f7aa11a",
+      "credentials": {
+        "telegramApi": {
+          "id": "9TSE4L0awDEKF86f",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "/* only return new items */\nconst staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.guid;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse()"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        -240
+      ],
+      "id": "20f0abb0-3340-4609-b363-19a073f08be7"
+    }
+  ],
+  "connections": {
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "lastItemId": "https://blog.chensoul.com/posts/2023/09/05/java-design-patterns-builder/"
+    }
+  },
+  "pinData": {},
+  "versionId": "34f6a540-2c36-46c0-b389-509519e741e0",
+  "triggerCount": 1,
+  "tags": []
+}

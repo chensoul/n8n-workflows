@@ -1,0 +1,151 @@
+{
+  "createdAt": "2023-09-06T02:02:46.128Z",
+  "updatedAt": "2023-09-06T02:03:02.001Z",
+  "id": "Uu2bakeRLba1xiG4",
+  "name": "github activities to tg",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "d111d7f9-4dfa-417e-ae97-3267d5692111",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        900,
+        -320
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://github.com/chensoul.atom",
+        "options": {}
+      },
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -200
+      ],
+      "id": "95c4b4f9-85c0-4289-aa34-73b48a834c2b"
+    },
+    {
+      "parameters": {
+        "functionCode": "/* only return new items */\nconst staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.guid;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse();"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1460,
+        -200
+      ],
+      "id": "c3002277-44a5-487f-ae11-536d200e608b"
+    },
+    {
+      "parameters": {
+        "chatId": "@chensoul_share",
+        "text": "={{$json[\"tgTitle\"]}}\n\n{{$json[\"link\"]}}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1620,
+        -40
+      ],
+      "id": "dd77a061-2d91-4543-81e4-0324a05100b6",
+      "credentials": {
+        "telegramApi": {
+          "id": "9TSE4L0awDEKF86f",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "interval": 30,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        900,
+        -40
+      ],
+      "id": "cafc4cf8-5a79-4b16-89ec-60961c16ef74"
+    },
+    {
+      "parameters": {
+        "functionCode": "/* filter items */\nconst newItems = [];\n\nconst regexes = {\n  'star': /^reorx starred/,\n  'pull-request': /^reorx opened a pull request/,\n  'issue': /^reorx opened an issue/,\n}\nconst tagSymbols = {\n  'star': '🌟',\n  'pull-request': '⤴️',\n  'issue': '⚡️'\n}\n\nfor (const item of items) {\n  const title = item.json.title\n  let tag = ''\n\n  for (const key in regexes) {\n    const regex = regexes[key]\n    if (regex.test(title)) {\n      tag = key\n      break\n    }\n  }\n  if (tag !== '') {\n    item.json.tag = tag\n    item.json.tgTitle = `${tagSymbols[tag]} ${title.replace(/^reorx /, '')} #github #${tag}`\n    item.json.guid = item.json.id\n    newItems.push(item)\n  }\n}\n\nreturn newItems"
+      },
+      "name": "Function filter",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        -40
+      ],
+      "id": "ca90723c-9d7c-4631-908d-3749725e63af"
+    }
+  ],
+  "connections": {
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "Function filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function filter": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "versionId": "a1971518-d70e-4599-8238-c7d7ec04c8ad",
+  "triggerCount": 1,
+  "tags": []
+}

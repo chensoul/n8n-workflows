@@ -1,0 +1,162 @@
+{
+  "createdAt": "2023-09-06T02:17:58.223Z",
+  "updatedAt": "2023-09-06T06:46:58.187Z",
+  "id": "xe9bkNKsTfeekNnc",
+  "name": "github issues to tg",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "90433142-39e6-4873-9297-63186c6af932",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "@chensoul_share",
+        "text": "=⚡️ {{$json[\"title\"]}} #github #issue\n\n{{$json[\"html_url\"]}}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1740,
+        -200
+      ],
+      "id": "78a147a2-de49-473d-bea9-c340c8ed97d9",
+      "credentials": {
+        "telegramApi": {
+          "id": "9TSE4L0awDEKF86f",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "unit": "hours"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -180
+      ],
+      "id": "a983f571-da4b-4062-af55-e90dca90203f"
+    },
+    {
+      "parameters": {
+        "authentication": "headerAuth",
+        "url": "=https://api.github.com/search/issues?q={{encodeURIComponent('is:issue author:chensoul is:public')}}",
+        "options": {}
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1220,
+        -340
+      ],
+      "id": "7168492b-2d33-4b3f-8fa5-82e310ee392b",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "KSNGO4UiA9rJhuEF",
+          "name": "github account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "/* only return new items */\nconst staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.id;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems"
+      },
+      "name": "Function1",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        -340
+      ],
+      "id": "b8054683-4ca9-4438-bd28-a0de0d0dd660"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "items",
+        "options": {}
+      },
+      "name": "Item Lists",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        -200
+      ],
+      "id": "a03fd3c5-b3b9-4d31-980d-c9adfc15d250"
+    }
+  ],
+  "connections": {
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Item Lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item Lists": {
+      "main": [
+        [
+          {
+            "node": "Function1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function1": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "lastItemId": 1531805068
+    }
+  },
+  "pinData": {},
+  "versionId": "057c546f-e7ec-451e-a8af-ac8e4ed389fe",
+  "triggerCount": 1,
+  "tags": []
+}

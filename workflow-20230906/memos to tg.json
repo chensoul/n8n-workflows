@@ -1,0 +1,131 @@
+{
+  "createdAt": "2023-09-06T03:00:48.289Z",
+  "updatedAt": "2023-09-06T06:53:20.941Z",
+  "id": "xBACUAVdNjwtyzMT",
+  "name": "memos to tg",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8db896ac-35b5-4668-b23c-8e6430ab8531",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        900,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "functionCode": "const staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.id;\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(item)\n  }\n} else {\n  newItems = [firstItem]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse()"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        400
+      ],
+      "id": "31aa60d7-fb41-4817-a8f8-fedb35823d50"
+    },
+    {
+      "parameters": {
+        "chatId": "@chensoul_share",
+        "text": "=▶️ {{$json[\"content\"]}} #memos\n\nhttps://memos.chensoul.com/m/{{$json[\"id\"]}}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        400
+      ],
+      "id": "8dae6c9e-3d49-4804-a845-13efcf4cca25",
+      "credentials": {
+        "telegramApi": {
+          "id": "9TSE4L0awDEKF86f",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "interval": 10,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        900,
+        600
+      ],
+      "id": "2239bc86-0526-4cc7-bae6-53b31c89d6a6"
+    },
+    {
+      "parameters": {
+        "url": "https://memos.chensoul.com/api/v1/memo?openId=bff14007-bcff-4dc2-80ff-5ab9fd61170f",
+        "options": {}
+      },
+      "id": "0f53eb33-f3a2-4b4b-ade1-1d6acaa25df1",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1060,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "lastItemId": 1
+    }
+  },
+  "pinData": {},
+  "versionId": "6359befb-1836-4dc5-a855-17d554263ffe",
+  "triggerCount": 1,
+  "tags": []
+}

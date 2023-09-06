@@ -1,0 +1,171 @@
+{
+  "createdAt": "2023-09-06T02:11:32.560Z",
+  "updatedAt": "2023-09-06T06:52:37.420Z",
+  "id": "N741A66iFdy4CUCe",
+  "name": "pinboard to tg",
+  "active": true,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "80bad628-6d65-45c6-a45e-6faa33eaaa19",
+      "name": "Start",
+      "type": "n8n-nodes-base.start",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "@chensoul_share",
+        "text": "=🔖 {{$json[\"description\"]}} #bookmark #pinboard \n\n{{$json[\"href\"]}}\n{{$json[\"tagsHTML\"]}}",
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "name": "Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        -140
+      ],
+      "id": "30eb96e9-3e91-4d24-a4e1-beb85e7c27a9",
+      "credentials": {
+        "telegramApi": {
+          "id": "9TSE4L0awDEKF86f",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "interval": 5,
+        "unit": "minutes"
+      },
+      "name": "Interval",
+      "type": "n8n-nodes-base.interval",
+      "typeVersion": 1,
+      "position": [
+        720,
+        -120
+      ],
+      "id": "7b85f476-587c-4f10-8cfc-2bfe449c4c5c"
+    },
+    {
+      "parameters": {
+        "authentication": "queryAuth",
+        "url": "=https://api.pinboard.in/v1/posts/recent",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "format",
+              "value": "json"
+            }
+          ]
+        }
+      },
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        940,
+        -280
+      ],
+      "id": "696e77f2-4935-4f35-aa27-c910ae857ac0",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "zJeb09gS3lqK3Ofq",
+          "name": "pinboard account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "posts",
+        "options": {}
+      },
+      "name": "Item Lists",
+      "type": "n8n-nodes-base.itemLists",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        -140
+      ],
+      "id": "8ed45b09-08e6-414a-9087-1dbbbaafc254"
+    },
+    {
+      "parameters": {
+        "functionCode": "/* filter items */\nitems = items.filter(item => item.json.shared === 'yes')\n\n/* only return new items */\nconst staticData = getWorkflowStaticData('global');\nconst lastItemId = staticData.lastItemId;\n\nconsole.log('lastItemId', lastItemId);\nconst firstItem = items[0];\nlet newItems = [];\n\nfunction getId(item) {\n  return item.json.hash;\n}\n\nfunction addProperties(item) {\n  // add new property: tagsHTML\n  item.json.tagsHTML = item.json.tags.split(' ').map(i => `<code>${i}</code>`).join(', ')\n  return item\n}\n\nif (lastItemId) {\n  for (const item of items) {\n    if (getId(item) === lastItemId) {\n      break;\n    }\n    newItems.push(addProperties(item))\n  }\n} else {\n  newItems = [addProperties(firstItem)]\n}\n\nstaticData.lastItemId = getId(firstItem)\nreturn newItems.reverse()"
+      },
+      "name": "Function",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        -280
+      ],
+      "id": "d547ac24-9b80-410d-91c1-3572f6e41bec"
+    }
+  ],
+  "connections": {
+    "Interval": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Item Lists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item Lists": {
+      "main": [
+        [
+          {
+            "node": "Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Function": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "global": {
+      "lastItemId": "7c26486c410e51fc60a7e05920073f06"
+    }
+  },
+  "pinData": {},
+  "versionId": "2141a108-2b87-4f12-bcd5-1442c710882f",
+  "triggerCount": 1,
+  "tags": []
+}
